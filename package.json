@@ -1,0 +1,29 @@
+{
+  "name": "oli-promise",
+  "version": "1.0.0",
+  "description": "A promise/A+ implementation.",
+  "main": "src/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "promises-aplus-tests": "^2.1.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "promises-aplus-tests ./src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ochukai/promise.git"
+  },
+  "keywords": [
+    "promise"
+  ],
+  "author": "Oliver",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ochukai/promise/issues"
+  },
+  "homepage": "https://github.com/ochukai/promise#readme"
+}
