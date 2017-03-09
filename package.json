@@ -3,15 +3,14 @@
   "version": "1.0.0",
   "description": "A promise/A+ implementation.",
   "main": "src/index.js",
-  "directories": {
-    "test": "test"
+  "directories": {},
+  "dependencies": { },
+  "devDependencies": {
+    "promises-aplus-tests": "*",
+    "promises-es6-tests": "*"
   },
-  "dependencies": {
-    "promises-aplus-tests": "^2.1.2"
-  },
-  "devDependencies": {},
   "scripts": {
-    "test": "promises-aplus-tests ./src/index.js"
+    "test": "promises-aplus-tests test/adapter && promises-es6-tests test/adapter"
   },
   "repository": {
     "type": "git",

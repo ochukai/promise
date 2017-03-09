@@ -44,6 +44,10 @@ function Promise(resolver) {
     throw new TypeError('resolver must be a function');
   }
 
+  if (this.state !== undefined) {
+    throw new TypeError('already resolved promise.');
+  }
+
   // 默认是 pending 状态
   this.state = PENDING;
   // resolve 的值
@@ -91,6 +95,10 @@ function Promise(resolver) {
  * @param {Function} onRejected
  */
 Promise.prototype.then = function (onResolved, onRejected) {
+  if (this.constructor !== Promise) {
+    throw new TypeError('\'this\' is not a Promise constructor');
+  }
+
   if ((!util.isFunction(onResolved) && this.state === FULFILLED)
    || (!util.isFunction(onRejected) && this.state === REJECTED)) {
     return this;
@@ -215,7 +223,7 @@ Promise.prototype.__runInOrder = function (fn, value) {
 /**
  * 当上一个 then 执行完之后，会调用 doResolve 方法，
  * 也有两种情况：
- *     上一个 then 返回的值是一个 promise（存在 then 方法），继续调用 then 方法
+ *     上一个 then 返回的值是一个 promise（存在 then 方法），继续调用 then
  *     不是 promise，改变当前 promise 的状态为 fulfilled，通知 queue 里面的 Executor
  */
 Promise.prototype.doResolve = function (value) {
@@ -274,21 +282,37 @@ Executor.prototype.doReject = function (err) {
 
 //  static methods
 
-Promise.resolve = function(value) {
+Promise.resolve = function (value) {
+  if (this !== Promise) {
+    throw new TypeError('\'this\' is not a Promise constructor');
+  }
+  
   return value instanceof Promise
             ? value
             : new Promise(util.noop).doResolve(value);
 };
 
-Promise.reject = function(err) {
+Promise.reject = function (err) {
+  if (this !== Promise) {
+    throw new TypeError('\'this\' is not a Promise constructor');
+  }
+
   return new Promise(util.noop).doReject(err);
 };
 
 Promise.all = function(arr) {
+  if (this !== Promise) {
+    throw new TypeError('\'this\' is not a Promise constructor');
+  }
+
   var promise = new Promise(util.noop);
 
   if (!util.isArray(arr)) {
     return promise.doReject(new TypeError('argument must be an array.'));
+  }
+
+  if (arr.length === 0) {
+    return promise.doResolve([]);
   }
 
   var countDone = 0;
@@ -315,6 +339,10 @@ Promise.all = function(arr) {
 };
 
 Promise.race = function (values) {
+  if (this !== Promise) {
+    throw new TypeError('\'this\' is not a Promise constructor');
+  }
+
   return new Promise(function (resolve, reject) {
     values.forEach(function(value){
       Promise.resolve(value).then(resolve, reject);
