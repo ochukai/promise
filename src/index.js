@@ -80,7 +80,8 @@ function Promise(resolver) {
  *           promise.then();
  *           promise.then();
  *       queue 里面就会有三个。
- *       上面的写法，每次 then() 都会返回新的 promise，下面的写法，都在同一个 promise 上面操作。（前提是这个 promise 的初始化过程比较慢 ~）
+ *       上面的写法，每次 then() 都会返回新的 promise，下面的写法，都在同一个 promise
+ *       上面操作。（前提是这个 promise 的初始化过程比较慢 ~）
  *
  *    promise.then(
  *      function onResolved() { ... },
@@ -105,6 +106,8 @@ Promise.prototype.then = function (onResolved, onRejected) {
   }
 
   var promise2 = new Promise(util.noop);
+  // state 默认就是 PENDING，如果完成 或者失败会改变
+  // 如果在 then 方法里面还是 PENDING 的话，说明前一个过程还没有结束
   if (this.state !== PENDING) {
     var dummy = this.state === FULFILLED
               ? onResolved
@@ -174,14 +177,14 @@ Promise.prototype.__callThen = function (then) {
   function resolve(value) {
     if (!called) {
       called = true;
-      self.doResolve(value);
+      self.__doResolve(value);
     }
   }
 
   function reject(e) {
     if (!called) {
       called = true;
-      self.doReject(e);
+      self.__doReject(e);
     }
   }
 
@@ -190,14 +193,14 @@ Promise.prototype.__callThen = function (then) {
   } catch (e) {
     if (!called) {
       called = true;
-      this.doReject(e);
+      this.__doReject(e);
     }
   }
 };
 
 /**
  * 同步变成异步
- * 执行真正的方法，在下一个 tick，就算是 很简单的 then方法，也不会立即执行，
+ * 执行真正的方法，在下一个 tick，就算是很简单的 then方法，也不会立即执行，
  * 而是等到所有 then 方法链都添加完之后，
  */
 Promise.prototype.__runInOrder = function (fn, value) {
@@ -209,13 +212,13 @@ Promise.prototype.__runInOrder = function (fn, value) {
       // (i.e. with no this value).
       ret = fn(value);
     } catch (e) {
-      return self.doReject(e);
+      return self.__doReject(e);
     }
 
     if (ret === self) {
-      self.doReject(new TypeError('Cannot resolve promise with itself.'));
+      self.__doReject(new TypeError('Cannot resolve promise with itself.'));
     } else {
-      self.doResolve(ret);
+      self.__doResolve(ret);
     }
   });
 };
@@ -226,7 +229,7 @@ Promise.prototype.__runInOrder = function (fn, value) {
  *     上一个 then 返回的值是一个 promise（存在 then 方法），继续调用 then
  *     不是 promise，改变当前 promise 的状态为 fulfilled，通知 queue 里面的 Executor
  */
-Promise.prototype.doResolve = function (value) {
+Promise.prototype.__doResolve = function (value) {
   try {
     var then = util.getThen(value);
     if (then) {
@@ -241,11 +244,11 @@ Promise.prototype.doResolve = function (value) {
 
     return this;
   } catch (e) {
-    return this.doReject(e);
+    return this.__doReject(e);
   }
 };
 
-Promise.prototype.doReject = function (err) {
+Promise.prototype.__doReject = function (err) {
   this.state = REJECTED;
   this.value = err;
   this.queue.forEach(function (item) {
@@ -268,7 +271,7 @@ Executor.prototype.doResolve = function (value) {
   if (util.isFunction(this.onResolved)) {
     this.promise.__runInOrder(this.onResolved, value);
   } else {
-    this.promise.doResolve(value);
+    this.promise.__doResolve(value);
   }
 };
 
@@ -276,7 +279,7 @@ Executor.prototype.doReject = function (err) {
   if (util.isFunction(this.onRejected)) {
     this.promise.__runInOrder(this.onRejected, err);
   } else {
-    this.promise.doReject(err);
+    this.promise.__doReject(err);
   }
 };
 
@@ -286,10 +289,10 @@ Promise.resolve = function (value) {
   if (this !== Promise) {
     throw new TypeError('\'this\' is not a Promise constructor');
   }
-  
+
   return value instanceof Promise
             ? value
-            : new Promise(util.noop).doResolve(value);
+            : new Promise(util.noop).__doResolve(value);
 };
 
 Promise.reject = function (err) {
@@ -297,7 +300,7 @@ Promise.reject = function (err) {
     throw new TypeError('\'this\' is not a Promise constructor');
   }
 
-  return new Promise(util.noop).doReject(err);
+  return new Promise(util.noop).__doReject(err);
 };
 
 Promise.all = function(arr) {
@@ -308,11 +311,11 @@ Promise.all = function(arr) {
   var promise = new Promise(util.noop);
 
   if (!util.isArray(arr)) {
-    return promise.doReject(new TypeError('argument must be an array.'));
+    return promise.__doReject(new TypeError('argument must be an array.'));
   }
 
   if (arr.length === 0) {
-    return promise.doResolve([]);
+    return promise.__doResolve([]);
   }
 
   var countDone = 0;
@@ -326,11 +329,11 @@ Promise.all = function(arr) {
         function onResolved(value) {
           values[index] = value;
           if (++countDone === len) {
-            promise.doResolve(values);
+            promise.__doResolve(values);
           }
         },
         function onRejected(err) {
-          promise.doReject(err);
+          promise.__doReject(err);
         }
       );
   });

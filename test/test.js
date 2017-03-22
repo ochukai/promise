@@ -51,3 +51,6 @@ var Promise = require('../src');
 
 // resolveP(1);
 // console.log('sss');
+
+
+box-shadow: 0 1px 3px rgba(0,37,55,.05);
