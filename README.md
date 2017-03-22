@@ -1,37 +1,37 @@
-## Welcome to GitHub Pages
+## Promise
 
-You can use the [editor on GitHub](https://github.com/ochukai/promise/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+通过了 promises-aplus-tests 和  promises-es6-tests 这两个测试，包括 Deferred 的写法。
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+## 用法
 
-### Markdown
+像普通的 promise 框架那样
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+```js
+var p =
+  new Promise(function (resolve) {
+    setTimeout(function () {
+      console.log('first');
+      resolve(true);
+    }, 1000);
+  })
+  .delay(1000)
+  .then(function(value) {
+    console.log('finally:', value);
+  })
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+## 方法列表
 
-### Jekyll Themes
+* then
+* catch
+* done
+* delay
+* Promise.resolve
+* Promise.reject
+* Promise.all
+* Promise.race
+* Promise.deferred
+* Promise.defer
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/ochukai/promise/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
 
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+谢谢~
